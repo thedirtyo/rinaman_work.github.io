@@ -1,1 +1,3 @@
+Today our country is divided as ever, but are we really that different?  Using Reddit Posts from people who labeled themselves as either Liberal or Conservative I conducted text analysis to see if the talking points of both groups are really that different.  I looked for key topic words such as "Government", "Trump", and "Biden" while conducting sentiment analysis to really understand if the sentiment between the groups is really all that different.  As it turns out both sides had similar sentiment with "Biden" and "Government", but the real differences in sentiment was when the word "Trump" was used.  It was an interesting project, and I hope you take a few minutes and go over the presentation.  
 
+The Code for this analysis was done in the R programing language.  
