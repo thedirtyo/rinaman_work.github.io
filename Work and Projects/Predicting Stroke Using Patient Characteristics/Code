@@ -1,1 +1,405 @@
+#Load in the packages
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
 
+#Load in the data
+```{r}
+data <- read.csv("C:/Users/oriri/OneDrive/Desktop/DSC680/Project 2/stroke_data.csv")
+```
+
+#cleaning the data
+```{r}
+#removing column id
+data <- data %>%
+  select(-c(id)) %>%
+  filter(gender != "Other") %>%
+  mutate(stroke = as.factor(stroke))
+```
+
+#getting a count of all the stroke events
+```{r}
+data %>%
+  group_by(stroke) %>%
+  count()
+```
+
+#Visualizing the categorical variables against stroke status
+```{r}
+#putting all of the categorical variables in a list
+cat_list <- c("gender", "hypertension", "heart_disease", "ever_married", "Residence_type", "smoking_status")
+
+for(i in cat_list){
+  plot <- ggplot(data = data, aes_string(x = i, fill = data$stroke)) +
+          geom_bar(position = "dodge") +
+          ggtitle(i)
+          
+  print(plot)
+}
+```
+#getting proportions of the categorical variables
+#gender
+```{r}
+#Count of stroke by gender
+data %>%
+  group_by(gender, stroke) %>%
+  count()
+
+#Female
+slices <- c(2853, 141)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Female Stroke Events")
+
+#Male
+slices <- c(2007, 108)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Male Stroke Events")
+
+#2 proportion test
+prop.test(x = c(141, 108), n = c(2994, 2115))
+```
+
+#hypertension
+```{r}
+#Getting counts of stroke events by hyper tension
+data %>%
+  group_by(hypertension, stroke) %>%
+  count()
+
+#No Hypertension
+slices <- c(4428, 183)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="No Hypertension Stroke Events")
+
+#Hypertension
+slices <- c(432, 66)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Hypertension Stroke Events")
+
+#2 proportion test
+prop.test(x = c(183, 66), n = c(4611, 498))
+```
+#heart_disease
+```{r}
+#Getting counts of stroke by if a patient has heart disease
+data %>%
+  group_by(heart_disease, stroke) %>%
+  count()
+
+#No Hypertension
+slices <- c(4631, 202)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="No Heart Disease Stroke Events")
+
+#Hypertension
+slices <- c(229, 47)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Heart Disease Stroke Events")
+
+#2 proportion test
+prop.test(x = c(202, 47), n = c(4833, 276))
+```
+
+#ever_married
+```{r}
+#Getting counts of if a patient was married by stroke
+data %>%
+  group_by(ever_married, stroke) %>%
+  count()
+
+#Never Married
+slices <- c(1727, 29)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Never Married Stroke Events")
+
+#Married
+slices <- c(3133, 220)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Married Stroke Events")
+
+#2 proportion test
+prop.test(x = c(29, 220), n = c(1156, 3353))
+```
+
+#Residence_type
+```{r}
+#Getting Counts of stroke events by residence type
+data %>%
+  group_by(Residence_type, stroke) %>%
+  count()
+
+#Rural Residence
+slices <- c(2399, 114)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Rural Residence Stroke Events")
+
+#Urban Residence
+slices <- c(2461, 135)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Urban Stroke Events")
+
+#2 proportion test
+prop.test(x = c(114, 220), n = c(2513, 2596))
+```
+
+#smoking_status
+```{r}
+data %>%
+  group_by(smoking_status, stroke) %>%
+  count()
+
+#Formerly Smoked
+slices <- c(814, 70)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Formerly Smoked Stroke Events")
+
+#Never Smoked
+slices <- c(1802, 90)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Never Smoked Stroke Events")
+
+#Smokes
+slices <- c(747, 42)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Smokes Stroke Events")
+
+#Unknown
+slices <- c(1497, 47)
+lbls <- c("No Stroke", "Stroke")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Unknown Stroke Events")
+```
+
+#Investigating Continuous Variables
+```{r}
+numeric_vars <- data %>%
+  select(age, avg_glucose_level, bmi, stroke)
+
+str(numeric_vars)
+```
+
+#age
+```{r}
+numeric_vars %>%
+  ggplot(aes(x = stroke, y = age)) +
+  geom_boxplot() +
+  ggtitle("Stroke Event By Age")
+
+numeric_vars %>%
+  ggplot(aes(x = age)) +
+  geom_histogram() +
+  facet_wrap(~stroke) +
+  ggtitle("Histograms of Age seperated by Stroke Event")
+```
+#avg_glucose_level
+```{r}
+numeric_vars %>%
+  ggplot(aes(x = stroke, y = avg_glucose_level)) +
+  geom_jitter() +
+  ggtitle("Stroke Event By avg_glucose_level")
+
+numeric_vars %>%
+  ggplot(aes(x = stroke, y = avg_glucose_level)) +
+  geom_boxplot() +
+  ggtitle("Stroke Event By avg_glucose_level")
+
+numeric_vars %>%
+  ggplot(aes(x = avg_glucose_level)) +
+  geom_histogram() +
+  facet_wrap(~stroke) +
+  ggtitle("Histograms of Average Glucose Level seperated by Stroke Event")
+```
+
+#bmi
+```{r}
+numeric_vars %>%
+  filter(bmi != "N/A") %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  ggplot(aes(x = stroke, y = bmi))+
+  geom_jitter() +
+  ggtitle("Jitter Plot of Stroke Event by BMI")
+
+numeric_vars %>%
+  filter(bmi != "N/A") %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  ggplot(aes(x = stroke, y = bmi))+
+  geom_boxplot() +
+  ggtitle("Box Plot of Stroke Event by BMI")
+
+numeric_vars %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  ggplot(aes(x = bmi)) +
+  geom_histogram() +
+  facet_wrap(~stroke) +
+  ggtitle("Histograms BMI seperated by Stroke Event")
+```
+#relationships between numeric variables
+```{r}
+ggplot(data, aes(x = avg_glucose_level, y = age)) +
+  geom_point() +
+  facet_wrap(~stroke)
+
+numeric_vars %>%
+  filter(bmi != "N/A") %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  ggplot(aes(x = bmi, y = age)) +
+  geom_point() +
+  facet_wrap(~stroke)
+
+numeric_vars %>%
+  filter(bmi != "N/A") %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  ggplot(aes(x = bmi, y = avg_glucose_level)) +
+  geom_point() +
+  facet_wrap(~stroke)
+```
+
+
+#New dataset for the updated models
+```{r}
+model_df <- data %>%
+  filter(gender != "Other") %>%
+  mutate(stroke = as.factor(stroke)) %>%
+  filter(bmi != "N/A") %>%
+  mutate(bmi = as.numeric(bmi)) %>%
+  filter(age > 45) %>%
+  filter(smoking_status != "Unknown") %>%
+  select(-c(bmi, work_type))
+```
+
+#Random Forest modeling
+```{r}
+library(randomForest)
+library(datasets)
+library(caret)
+set.seed(11)
+#creating a train and test set
+stroke <- model_df %>%
+  filter(stroke == '1')
+dt <- sort(sample(nrow(stroke), nrow(stroke)*.8))
+train <- stroke[dt,]
+test <- stroke[-dt,]
+
+no_stroke <- model_df %>%
+  filter(stroke == '0') %>%
+  sample_n(500)
+
+dt2 <- sort(sample(nrow(no_stroke), nrow(no_stroke)*.8))
+train2 <- no_stroke[dt2,]
+test2 <- no_stroke[-dt2,]
+
+training <- rbind(train, train2)
+testing <- rbind(test, test2)
+
+
+#training the model
+rf <- randomForest(stroke~., data = training)
+
+#Prediction and Confusion Matrix
+p1 <- predict(rf, training)
+confusionMatrix(p1,training$stroke)
+
+p2 <- predict(rf,testing)
+confusionMatrix(p2, testing$stroke)
+```
+
+#logistic Regression
+```{r}
+library(fastDummies)
+set.seed(11)
+#creating a train and test set
+stroke <- model_df %>%
+  filter(stroke == '1')
+
+stroke <- dummy_cols(stroke,select_columns = c('gender', 'ever_married', 'Residence_type'))
+dt <- sort(sample(nrow(stroke), nrow(stroke)*.8))
+train <- stroke[dt,]
+test <- stroke[-dt,]
+
+no_stroke <- model_df %>%
+  filter(stroke == '0') %>%
+  sample_n(500)
+no_stroke <- dummy_cols(no_stroke,select_columns = c('gender', 'ever_married', 'Residence_type'))
+
+dt2 <- sort(sample(nrow(no_stroke), nrow(no_stroke)*.8))
+train2 <- no_stroke[dt2,]
+test2 <- no_stroke[-dt2,]
+
+training <- rbind(train, train2)
+testing <- rbind(test, test2)
+
+log <- glm(stroke~hypertension + heart_disease, data = training, family = "binomial")
+summary(log)
+
+glm.probs <- predict(log, type = 'response')
+
+glm.pred <- ifelse(glm.probs > .5, "1", "0")
+
+table(glm.pred, training$stroke)
+
+mean(glm.pred == training$stroke)
+
+glm.probs2 = predict(log, newdata = testing, type = 'response')
+glm.pred2 = ifelse(glm.probs2 > .5, "1", "0")
+table(glm.pred2, testing$stroke)
+
+mean(glm.pred2 == testing$stroke)
+
+```
