@@ -1,1 +1,353 @@
 
+#Load in the needed R packages
+```{r}
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(stringr)
+library(tokenizers)
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(wordcloud2)
+library(readxl)
+library(SnowballC)
+
+```
+#Bring in the dataset
+```{r}
+df <- read_csv("C:/Users/oriri/OneDrive/Desktop/DSC680/Project 1/file_name.csv")
+```
+
+#Exploratory Analysis
+```{r, fig.height = 6}
+#seeing how many responses from each political lean
+df %>%
+  group_by(`Political Lean`) %>%
+  count() %>%
+  ggplot(aes(x = `Political Lean`, y = n, fill = `Political Lean`)) +
+  geom_col() +
+  ggtitle("Count of Liberal and Conservative")
+#seeing how many responses from each sub reddit or subgroup
+df %>%
+  group_by(Subreddit) %>%
+  count() %>%
+  ggplot(aes(x = reorder(Subreddit, -n), y = n, fill = Subreddit)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Count of Subreddit")
+```
+#Cleaning the text data for analysis
+```{r}
+data <- df %>%
+  select(`Political Lean`, Text) %>%
+  na.omit()
+
+#Cleaning and Processing the text
+#All lower case
+data$Text <- tolower(data$Text)
+
+#Remove Punctuation
+data$Text <- removePunctuation(data$Text)
+
+#Remove Numbers
+data$Text <- removeNumbers(data$Text)
+
+#Remove white space
+data$Text <- stripWhitespace(data$Text)
+
+data("stop_words")
+```
+
+#removing stop words
+```{r}
+data("stop_words")
+
+tokens <- data %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+```
+
+#Getting top 10 words used in all responses from conservatives and liberals
+```{r}
+#conservative
+#words to remove 
+cwords2rem <- c('im', 'xb', 'dont')
+
+conserv <- tokens %>%
+  filter(`Political Lean` == 'Conservative') %>%
+  filter(!(word %in% cwords2rem)) %>%
+  filter(n > 144) %>%
+  mutate(word = reorder(word, n))
+
+ggplot(conserv, aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words used in Conservative Responses")
+
+#liberal
+#words to remove
+lwords2rem <- c('im', 'dont')
+
+lib <- tokens %>%
+  filter(`Political Lean` == 'Liberal') %>%
+  filter(!(word %in% lwords2rem)) %>%
+  filter(n > 360) %>%
+  mutate(word = reorder(word, n))
+
+ggplot(lib, aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words used in Liberal Responses")
+
+```
+
+#Sentiment Analysis on all responses
+```{r}
+#getting the total sentiment of words used by liberals and conservatives
+bing <- get_sentiments("bing")
+
+group_sentiment <- tokens %>%
+  inner_join(get_sentiments('bing')) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  group_by(`Political Lean`) %>%
+  summarise(positive = sum(positive), negative = sum(negative)) 
+
+group_sentiment %>%
+  mutate(percent_pos = (positive/(positive + negative))) %>%
+  mutate(percent_neg = (negative/(positive + negative)))
+
+slices <- c(48, 52)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Liberal Total Response Sentiment")
+
+slices <- c(48, 52)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Conservatives Total Response Sentiment")
+
+```
+
+#What storys are people commenting on
+```{r}
+#Looking to see what are the words used in the stories people are commenting on
+data2 <- df %>%
+  select(Title, `Political Lean`) %>%
+  na.omit()
+
+#Cleaning and Processing the text
+#All lower case
+data2$Title <- tolower(data2$Title)
+
+#Remove Punctuation
+data2$Title <- removePunctuation(data2$Title)
+
+#Remove Numbers
+data2$Title <- removeNumbers(data2$Title)
+
+#Remove white space
+data2$Title <- stripWhitespace(data2$Title)
+
+data("stop_words")
+
+tokens2 <- data2 %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Title) %>%
+  anti_join(stop_words) %>%
+  mutate(word = ifelse(word == 'russian', 'russia',
+                ifelse(word == 'americans', 'american', word))) %>%
+  count(word, sort = TRUE)
+#conservative
+#words to remove 
+cwords2rem <- c('im', 'xb', 'dont')
+
+conserv <- tokens2 %>%
+  filter(`Political Lean` == 'Conservative') %>%
+  #filter(!(word %in% cwords2rem)) %>%
+  filter(n > 108) %>%
+  mutate(word = reorder(word, n))
+
+ggplot(conserv, aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words in Article Titles that Conservatives respond to")
+
+#liberal
+#words to remove
+lwords2rem <- c('im', 'dont')
+
+lib <- tokens2 %>%
+  filter(`Political Lean` == 'Liberal') %>%
+  #filter(!(word %in% lwords2rem)) %>%
+  filter(n > 174) %>%
+  mutate(word = reorder(word, n))
+
+ggplot(lib, aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words used in Article Titles that Liberals respond to")
+```
+
+#Sentiment on Trump and Biden
+```{r}
+trump <- data %>%
+  filter(grepl('trump', Text))
+biden <- data %>%
+  filter(grepl('biden', Text))
+
+tokens_trump <- trump %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words) %>%
+  mutate(word = ifelse(word == 'russian', 'russia',
+                 ifelse(word == 'americans', 'american', word))) %>%
+  count(word, sort = TRUE)
+
+#sentiment by each group for how they feel about president trump and president biden
+group_sentiment_trump <- tokens_trump %>%
+  inner_join(get_sentiments('bing')) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  group_by(`Political Lean`) %>%
+  summarise(positive = sum(positive), negative = sum(negative)) 
+
+tokens_biden <- biden %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+
+group_sentiment_biden <- tokens_biden %>%
+  inner_join(get_sentiments('bing')) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  group_by(`Political Lean`) %>%
+  summarise(positive = sum(positive), negative = sum(negative)) 
+
+bing <- get_sentiments("bing")
+
+
+
+group_sentiment_trump %>%
+  mutate(percent_pos = (positive/(positive + negative)))
+#conservative about trump
+slices <- c(59, 41)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Conservatives Talking about Trump")
+#liberals about trump
+slices <- c(36, 64)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Liberals Talking about Trump")
+
+group_sentiment_biden %>%
+  mutate(percent_pos = (positive/(positive + negative)))
+#conservative about biden
+slices <- c(44, 56)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Conservatives Talking about Biden")
+#liberals about biden
+slices <- c(48, 52)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Liberals Talking about Biden")
+
+```
+#Sentiment on government
+```{r}
+government <- data %>%
+  filter(grepl('government', Text))
+
+biden <- data %>%
+  filter(grepl('biden', Text))
+
+tokens_trump <- trump %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+
+tokens2 <- government %>%
+  group_by(`Political Lean`) %>%
+  unnest_tokens(word, Text) %>%
+  anti_join(stop_words) %>%
+  count(word, sort = TRUE)
+
+tokens2 %>%
+  inner_join(get_sentiments('bing')) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative) %>%
+  group_by(`Political Lean`) %>%
+  summarise(positive = sum(positive), negative = sum(negative), percent_pos = (positive/(positive + negative)))
+
+#conservatives about "government"
+slices <- c(37, 63)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Conservatives Talking about Government")
+
+slices <- c(40, 60)
+lbls <- c("Positive", "Negative")
+pct <- round(slices/sum(slices) * 100)
+lbls <- paste(lbls, pct)
+lbls <- paste(lbls,"%", sep = "")
+pie(slices,labels = lbls, col=c("green", "red"),
+   main="Liberals Talking about Government")
+
+```
+
+#Analysis on views of both sides when mentioning trump
+```{r}
+tokens_trump %>%
+  filter(n > 68, `Political Lean` == "Liberal") %>%
+  filter(word != "trump") %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words Liberals use when discussing Trump")
+  
+tokens_trump %>%
+  filter(n > 16, `Political Lean` == "Conservative") %>%
+  filter(word != "trump", word != 'xb') %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  ggtitle("Top 10 Words Conservatives use when discussing Trump")
+```
