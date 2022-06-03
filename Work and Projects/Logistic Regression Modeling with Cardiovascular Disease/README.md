@@ -1,1 +1,3 @@
+Cardiovascular disease is the number one cause of death globally.  The World Health Organization stats that cardiovascualr disease takes an estimated 17.9 million lives each year which accounts for almost 31% of the deaths world wide.  Using exploratory data analysis I investigated some of the variables from a health dataset in Kaggle to determine if I could predict if someone will have cardiovascular disease.  This was an interesting analysis and I highly encourage you to take a few minutes and go through my presentation, which also contains my code.  
 
+For this analysis I used the Python programming language.  
